@@ -53,13 +53,13 @@ impl NxFile {
 
 #[derive(Debug)]
 pub struct NxHeader {
-    node_count: u32,
+    pub node_count: u32,
     pub(crate) node_offset: u64,
-    string_count: u32,
+    pub string_count: u32,
     pub(crate) string_offset: u64,
-    bitmap_count: u32,
+    pub bitmap_count: u32,
     pub(crate) bitmap_offset: u64,
-    audio_count: u32,
+    pub audio_count: u32,
     pub(crate) audio_offset: u64,
 }
 
