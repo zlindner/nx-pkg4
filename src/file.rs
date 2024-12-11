@@ -16,13 +16,15 @@ pub struct NxFile {
 }
 
 impl NxFile {
-    /// Opens and memory maps an NX file.
-    ///
-    /// This function is marked unsafe since memory mapping a file is inherently unsafe. See the
-    /// memmap2 docs for more info.
-    pub unsafe fn open(path: &Path) -> Result<Self, NxError> {
+    /// Opens and memory maps an NX file, then validates its header.
+    pub fn open(path: &Path) -> Result<Self, NxError> {
         let file = File::open(path)?;
-        let data = Mmap::map(&file)?;
+
+        // Safety: a memory mapped file is unsafe as undefined behaviour can occur if the file is
+        // ever modified by another process while in use. This crate aims to provide a fully safe
+        // api so this shouldn't be a concern, however modifying the file will result in either
+        // NxErrors or values that don't make sense.
+        let data = unsafe { Mmap::map(&file)? };
         let header = NxHeader::new(&data)?;
         let root = data.try_get_node_data(header.node_offset)?;
 

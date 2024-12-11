@@ -59,6 +59,11 @@ impl<'a> NxNode<'a> {
 
         None
     }
+
+    /// Gets the data type of the node.
+    pub fn data_type(&self) -> NxNodeType {
+        self.data.data_type
+    }
 }
 
 /// The type of a node.
