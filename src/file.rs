@@ -30,8 +30,20 @@ impl NxFile {
         Ok(Self { data, header, root })
     }
 
-    pub fn header(&self) -> &NxHeader {
-        &self.header
+    pub fn node_count(&self) -> u32 {
+        self.header.node_count
+    }
+
+    pub fn string_count(&self) -> u32 {
+        self.header.string_count
+    }
+
+    pub fn bitmap_count(&self) -> u32 {
+        self.header.bitmap_count
+    }
+
+    pub fn audio_count(&self) -> u32 {
+        self.header.audio_count
     }
 
     pub fn root(&self) -> NxNode {
@@ -53,13 +65,13 @@ impl NxFile {
 
 #[derive(Debug)]
 pub struct NxHeader {
-    pub node_count: u32,
+    node_count: u32,
     pub(crate) node_offset: u64,
-    pub string_count: u32,
+    string_count: u32,
     pub(crate) string_offset: u64,
-    pub bitmap_count: u32,
+    bitmap_count: u32,
     pub(crate) bitmap_offset: u64,
-    pub audio_count: u32,
+    audio_count: u32,
     pub(crate) audio_offset: u64,
 }
 
