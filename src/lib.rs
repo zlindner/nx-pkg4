@@ -6,6 +6,7 @@ use thiserror::Error;
 pub mod file;
 pub mod node;
 
+/// An error that occured when reading an NX file.
 #[derive(Error, Debug)]
 pub enum NxError {
     #[error("failed to load nx file")]

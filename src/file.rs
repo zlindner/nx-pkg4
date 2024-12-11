@@ -8,6 +8,7 @@ use crate::{
     NxError, NxTryGet,
 };
 
+/// A memory mapped NX file.
 pub struct NxFile {
     pub(crate) data: Mmap,
     pub(crate) header: NxHeader,
@@ -15,11 +16,13 @@ pub struct NxFile {
 }
 
 impl NxFile {
-    pub fn open(path: &Path) -> Result<Self, NxError> {
+    /// Opens and memory maps an NX file.
+    ///
+    /// This function is marked unsafe since memory mapping a file is inherently unsafe. See the
+    /// memmap2 docs for more info.
+    pub unsafe fn open(path: &Path) -> Result<Self, NxError> {
         let file = File::open(path)?;
-
-        // Safety: TODO
-        let data = unsafe { Mmap::map(&file)? };
+        let data = Mmap::map(&file)?;
 
         let header = NxHeader::new(&data)?;
         println!("{:?}", header);
@@ -30,22 +33,27 @@ impl NxFile {
         Ok(Self { data, header, root })
     }
 
+    /// Gets the total number of nodes in the file.
     pub fn node_count(&self) -> u32 {
         self.header.node_count
     }
 
+    /// Gets the total number of strings in the file.
     pub fn string_count(&self) -> u32 {
         self.header.string_count
     }
 
+    /// Gets the total number of bitmaps in the file.
     pub fn bitmap_count(&self) -> u32 {
         self.header.bitmap_count
     }
 
+    /// Gets the total number of audio tracks in the file.
     pub fn audio_count(&self) -> u32 {
         self.header.audio_count
     }
 
+    /// Gets the root node.
     pub fn root(&self) -> NxNode {
         NxNode {
             data: self.root,
@@ -64,7 +72,7 @@ impl NxFile {
 }
 
 #[derive(Debug)]
-pub struct NxHeader {
+pub(crate) struct NxHeader {
     node_count: u32,
     pub(crate) node_offset: u64,
     string_count: u32,
