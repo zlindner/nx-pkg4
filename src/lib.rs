@@ -12,8 +12,8 @@ pub enum NxError {
     #[error("failed to load nx file")]
     Io(#[from] std::io::Error),
 
-    #[error("the header's magic bytes are invalid")]
-    InvalidMagicBytes,
+    #[error("the file's header is invalid")]
+    InvalidHeader,
 
     #[error("{0} is out of bounds")]
     OutOfBoundsIndex(usize),

@@ -23,12 +23,8 @@ impl NxFile {
     pub unsafe fn open(path: &Path) -> Result<Self, NxError> {
         let file = File::open(path)?;
         let data = Mmap::map(&file)?;
-
         let header = NxHeader::new(&data)?;
-        println!("{:?}", header);
-
         let root = data.try_get_node_data(header.node_offset)?;
-        println!("{:?}", root);
 
         Ok(Self { data, header, root })
     }
@@ -87,8 +83,10 @@ impl NxHeader {
     pub fn new(data: &Mmap) -> Result<Self, NxError> {
         // Validate that the first 4 bytes equals "PKG4".
         if data.try_get_u32(0)? != 0x34474B50 {
-            return Err(NxError::InvalidMagicBytes);
+            return Err(NxError::InvalidHeader);
         }
+
+        // TODO any errors here should be mapped to InvalidHeader.
 
         Ok(Self {
             node_count: data.try_get_u32(4)?,
@@ -100,5 +98,35 @@ impl NxHeader {
             audio_count: data.try_get_u32(40)?,
             audio_offset: data.try_get_u64(44)?,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn open_file_does_not_exist() {
+        let result = unsafe { NxFile::open(Path::new("data/file_that_does_not_exist.nx")) };
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn open_file_with_invalid_header() {
+        let result = unsafe { NxFile::open(Path::new("data/invalid_header.nx")) };
+        assert!(result.is_err());
+        assert!(matches!(result.err().unwrap(), NxError::InvalidHeader));
+    }
+
+    #[test]
+    fn open_valid_file() {
+        let result = unsafe { NxFile::open(Path::new("data/valid.nx")) };
+        assert!(result.is_ok());
+
+        let file = result.unwrap();
+        assert_eq!(file.node_count(), 432);
+        assert_eq!(file.string_count(), 227);
+        assert_eq!(file.bitmap_count(), 0);
+        assert_eq!(file.audio_count(), 0);
     }
 }

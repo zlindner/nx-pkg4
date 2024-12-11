@@ -42,9 +42,6 @@ impl<'a> NxNode<'a> {
                 Err(_) => return None,
             };
 
-            println!("current: {:?}", current);
-            println!("{}", current_name);
-
             match current_name.cmp(name) {
                 Ordering::Less => {
                     index += middle * (NX_NODE_OFFSET * 2);
