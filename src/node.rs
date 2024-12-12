@@ -23,7 +23,6 @@ pub struct NxNode<'a> {
 impl<'a> NxNode<'a> {
     /// Gets a node with the given name starting from the current node.
     pub fn get(&self, name: &str) -> Option<NxNode> {
-        // TODO: this might need to be self.data.index + ...
         let mut index = self.file.header.node_offset + self.data.children as u64 * NX_NODE_OFFSET;
         let mut count = self.data.count as u64;
 
@@ -46,7 +45,7 @@ impl<'a> NxNode<'a> {
 
             match current_name.cmp(name) {
                 Ordering::Less => {
-                    index += middle * (NX_NODE_OFFSET * 2);
+                    index = current.index + NX_NODE_OFFSET;
                     count -= middle + 1;
                 }
                 Ordering::Equal => {
