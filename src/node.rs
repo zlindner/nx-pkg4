@@ -1,11 +1,12 @@
 use std::cmp::Ordering;
 
-use crate::{file::NxFile, NxTryGet};
+use crate::{file::NxFile, NxError, NxTryGet};
 
 const NX_NODE_OFFSET: u64 = 20;
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct NxNodeData {
+    pub(crate) index: u64,
     pub(crate) name: u32,
     pub(crate) children: u32,
     pub(crate) count: u16,
@@ -22,6 +23,7 @@ pub struct NxNode<'a> {
 impl<'a> NxNode<'a> {
     /// Gets a node with the given name starting from the current node.
     pub fn get(&self, name: &str) -> Option<NxNode> {
+        // TODO: this might need to be self.data.index + ...
         let mut index = self.file.header.node_offset + self.data.children as u64 * NX_NODE_OFFSET;
         let mut count = self.data.count as u64;
 
@@ -60,9 +62,26 @@ impl<'a> NxNode<'a> {
         None
     }
 
+    pub fn name(&self) -> Result<&str, NxError> {
+        self.file.get_str(self.data.name)
+    }
+
     /// Gets the data type of the node.
     pub fn data_type(&self) -> NxNodeType {
         self.data.data_type
+    }
+
+    /// Gets an iterator over the node's children.
+    pub fn iter(&self) -> Result<NxNodeIterator, NxError> {
+        let data = self.file.data.try_get_node_data(
+            self.file.header.node_offset + self.data.children as u64 * NX_NODE_OFFSET,
+        )?;
+
+        Ok(NxNodeIterator {
+            data,
+            file: self.file,
+            count: self.data.count as usize,
+        })
     }
 }
 
@@ -90,6 +109,49 @@ impl From<u16> for NxNodeType {
             5 => Self::Bitmap,
             6 => Self::Audio,
             _ => Self::Invalid(value),
+        }
+    }
+}
+
+/// A node iterator.
+pub struct NxNodeIterator<'a> {
+    data: NxNodeData,
+    file: &'a NxFile,
+    count: usize,
+}
+
+impl<'a> Iterator for NxNodeIterator<'a> {
+    type Item = NxNode<'a>;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.count, Some(self.count))
+    }
+
+    fn next(&mut self) -> Option<NxNode<'a>> {
+        match self.count {
+            0 => None,
+            _ => {
+                self.count -= 1;
+
+                let node = NxNode {
+                    data: self.data,
+                    file: self.file,
+                };
+
+                // Get the next child node.
+                // It's position will be the current node's position + the size of a node.
+                let next = match self
+                    .file
+                    .data
+                    .try_get_node_data(self.data.index + NX_NODE_OFFSET)
+                {
+                    Ok(node) => node,
+                    Err(_) => return None,
+                };
+
+                self.data = next;
+                Some(node)
+            }
         }
     }
 }

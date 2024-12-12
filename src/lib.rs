@@ -54,6 +54,7 @@ impl NxTryGet for [u8] {
         let data = node_table.try_get_u64(12)?;
 
         Ok(NxNodeData {
+            index,
             name,
             children,
             count,

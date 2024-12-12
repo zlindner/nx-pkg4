@@ -23,7 +23,7 @@ impl NxFile {
         // Safety: a memory mapped file is unsafe as undefined behaviour can occur if the file is
         // ever modified by another process while in use. This crate aims to provide a fully safe
         // api so this shouldn't be a concern, however modifying the file will result in either
-        // NxErrors or values that don't make sense.
+        // `NxError`s or values that don't make sense.
         let data = unsafe { Mmap::map(&file)? };
         let header = NxHeader::new(&data)?;
         let root = data.try_get_node_data(header.node_offset)?;
@@ -109,20 +109,20 @@ mod tests {
 
     #[test]
     fn open_file_does_not_exist() {
-        let result = unsafe { NxFile::open(Path::new("data/file_that_does_not_exist.nx")) };
+        let result = NxFile::open(Path::new("data/file_that_does_not_exist.nx"));
         assert!(result.is_err());
     }
 
     #[test]
     fn open_file_with_invalid_header() {
-        let result = unsafe { NxFile::open(Path::new("data/invalid_header.nx")) };
+        let result = NxFile::open(Path::new("data/invalid_header.nx"));
         assert!(result.is_err());
         assert!(matches!(result.err().unwrap(), NxError::InvalidHeader));
     }
 
     #[test]
     fn open_valid_file() {
-        let result = unsafe { NxFile::open(Path::new("data/valid.nx")) };
+        let result = NxFile::open(Path::new("data/valid.nx"));
         assert!(result.is_ok());
 
         let file = result.unwrap();
