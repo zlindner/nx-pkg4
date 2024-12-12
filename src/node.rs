@@ -62,6 +62,7 @@ impl<'a> NxNode<'a> {
         None
     }
 
+    /// Gets the name of the node.
     pub fn name(&self) -> Result<&str, NxError> {
         self.file.get_str(self.data.name)
     }
