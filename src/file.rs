@@ -88,17 +88,15 @@ impl NxHeader {
             return Err(NxError::InvalidHeader);
         }
 
-        // TODO any errors here should be mapped to InvalidHeader.
-
         Ok(Self {
-            node_count: data.try_get_u32(4)?,
-            node_offset: data.try_get_u64(8)?,
-            string_count: data.try_get_u32(16)?,
-            string_offset: data.try_get_u64(20)?,
-            bitmap_count: data.try_get_u32(28)?,
-            bitmap_offset: data.try_get_u64(32)?,
-            audio_count: data.try_get_u32(40)?,
-            audio_offset: data.try_get_u64(44)?,
+            node_count: data.try_get_u32(4).map_err(|_| NxError::InvalidHeader)?,
+            node_offset: data.try_get_u64(8).map_err(|_| NxError::InvalidHeader)?,
+            string_count: data.try_get_u32(16).map_err(|_| NxError::InvalidHeader)?,
+            string_offset: data.try_get_u64(20).map_err(|_| NxError::InvalidHeader)?,
+            bitmap_count: data.try_get_u32(28).map_err(|_| NxError::InvalidHeader)?,
+            bitmap_offset: data.try_get_u64(32).map_err(|_| NxError::InvalidHeader)?,
+            audio_count: data.try_get_u32(40).map_err(|_| NxError::InvalidHeader)?,
+            audio_offset: data.try_get_u64(44).map_err(|_| NxError::InvalidHeader)?,
         })
     }
 }
