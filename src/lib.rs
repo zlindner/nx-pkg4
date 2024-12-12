@@ -28,8 +28,14 @@ pub enum NxError {
     InvalidString(#[from] core::str::Utf8Error),
 }
 
+pub struct NxBitmap {
+    pub index: u32,
+    pub width: u16,
+    pub height: u16,
+}
+
 pub(crate) trait NxTryGet {
-    fn try_get_node_data(&self, index: u64) -> Result<NxNodeData, NxError>;
+    fn try_get_bytes(&self, index: u64, len: usize) -> Result<&[u8], NxError>;
 
     fn try_get_u16(&self, index: u64) -> Result<u16, NxError>;
 
@@ -38,9 +44,43 @@ pub(crate) trait NxTryGet {
     fn try_get_u64(&self, index: u64) -> Result<u64, NxError>;
 
     fn try_get_str(&self, index: u64, len: u16) -> Result<&str, NxError>;
+
+    fn try_get_node_data(&self, index: u64) -> Result<NxNodeData, NxError>;
 }
 
 impl NxTryGet for [u8] {
+    fn try_get_bytes(&self, index: u64, len: usize) -> Result<&[u8], NxError> {
+        let usize_index = index as usize;
+        let usize_len = len as usize;
+
+        Ok(self
+            .get(usize_index..usize_index + usize_len)
+            .ok_or(NxError::OutOfBoundsRange(
+                usize_index,
+                usize_index + usize_len,
+            ))?)
+    }
+
+    fn try_get_u16(&self, index: u64) -> Result<u16, NxError> {
+        let bytes = self.try_get_bytes(index, size_of::<u16>())?;
+        Ok(u16::from_le_bytes(bytes.try_into()?))
+    }
+
+    fn try_get_u32(&self, index: u64) -> Result<u32, NxError> {
+        let bytes = self.try_get_bytes(index, size_of::<u32>())?;
+        Ok(u32::from_le_bytes(bytes.try_into()?))
+    }
+
+    fn try_get_u64(&self, index: u64) -> Result<u64, NxError> {
+        let bytes = self.try_get_bytes(index, size_of::<u64>())?;
+        Ok(u64::from_le_bytes(bytes.try_into()?))
+    }
+
+    fn try_get_str(&self, index: u64, len: u16) -> Result<&str, NxError> {
+        let bytes = self.try_get_bytes(index, len as usize)?;
+        Ok(str::from_utf8(bytes)?)
+    }
+
     fn try_get_node_data(&self, index: u64) -> Result<NxNodeData, NxError> {
         let usize_index = index as usize;
         let node_table = self
@@ -61,52 +101,5 @@ impl NxTryGet for [u8] {
             data_type,
             data,
         })
-    }
-
-    fn try_get_u16(&self, index: u64) -> Result<u16, NxError> {
-        let usize_index = index as usize;
-        let offset = size_of::<u16>();
-
-        let bytes = self
-            .get(usize_index..usize_index + offset)
-            .ok_or(NxError::OutOfBoundsRange(usize_index, usize_index + offset))?;
-
-        Ok(u16::from_le_bytes(bytes.try_into()?))
-    }
-
-    fn try_get_u32(&self, index: u64) -> Result<u32, NxError> {
-        let usize_index = index as usize;
-        let offset = size_of::<u32>();
-
-        let bytes = self
-            .get(usize_index..usize_index + offset)
-            .ok_or(NxError::OutOfBoundsRange(usize_index, usize_index + offset))?;
-
-        Ok(u32::from_le_bytes(bytes.try_into()?))
-    }
-
-    fn try_get_u64(&self, index: u64) -> Result<u64, NxError> {
-        let usize_index = index as usize;
-        let offset = size_of::<u64>();
-
-        let bytes = self
-            .get(usize_index..usize_index + offset)
-            .ok_or(NxError::OutOfBoundsRange(usize_index, usize_index + offset))?;
-
-        Ok(u64::from_le_bytes(bytes.try_into()?))
-    }
-
-    fn try_get_str(&self, index: u64, len: u16) -> Result<&str, NxError> {
-        let usize_index = index as usize;
-        let usize_len = len as usize;
-
-        let bytes =
-            self.get(usize_index..usize_index + usize_len)
-                .ok_or(NxError::OutOfBoundsRange(
-                    usize_index,
-                    usize_index + usize_len,
-                ))?;
-
-        Ok(str::from_utf8(bytes)?)
     }
 }

@@ -59,6 +59,7 @@ impl NxFile {
         }
     }
 
+    /// Gets a string from the file at the given index.
     pub(crate) fn get_str(&self, index: u32) -> Result<&str, NxError> {
         let offset = self
             .data
@@ -66,6 +67,16 @@ impl NxFile {
 
         let len = self.data.try_get_u16(offset)?;
         Ok(self.data.try_get_str(offset + 2, len)?)
+    }
+
+    /// Gets a bitmap from the file at the given index.
+    pub(crate) fn get_bitmap(&self, index: u32) -> Result<&[u8], NxError> {
+        let offset = self
+            .data
+            .try_get_u64(self.header.bitmap_offset + (index as u64 * size_of::<u64>() as u64))?;
+
+        let len = self.data.try_get_u32(offset)?;
+        Ok(self.data.try_get_bytes(offset, len as usize)?)
     }
 }
 
