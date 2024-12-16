@@ -76,7 +76,7 @@ impl NxFile {
             .try_get_u64(self.header.bitmap_offset + (index as u64 * size_of::<u64>() as u64))?;
 
         let len = self.data.try_get_u32(offset)?;
-        Ok(self.data.try_get_bytes(offset, len as usize)?)
+        Ok(self.data.try_get_bytes(offset + 4, len as usize)?)
     }
 }
 

@@ -1,6 +1,11 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, io};
 
-use crate::{file::NxFile, NxError, NxTryGet};
+use lz4_flex::{
+    decompress, decompress_size_prepended,
+    frame::{FrameDecoder, FrameEncoder},
+};
+
+use crate::{file::NxFile, NxBitmap, NxError, NxTryGet};
 
 const NX_NODE_OFFSET: u64 = 20;
 
@@ -69,6 +74,36 @@ impl<'a> NxNode<'a> {
     /// Gets the data type of the node.
     pub fn data_type(&self) -> NxNodeType {
         self.data.data_type
+    }
+
+    /// Gets a bitmap from a node.
+    pub fn bitmap(&self) -> Result<Option<NxBitmap>, NxError> {
+        match self.data.data_type {
+            NxNodeType::Bitmap => {
+                // Data is a u64 that we need to reinterpret as a u32 (index), and two u16's
+                // (width and height).
+                let bytes = self.data.data.to_le_bytes();
+
+                let index = u32::from_le_bytes(bytes[0..4].try_into()?);
+                let width = u16::from_le_bytes(bytes[4..6].try_into()?);
+                let height = u16::from_le_bytes(bytes[6..8].try_into()?);
+
+                let data = decompress(
+                    self.file.get_bitmap(index)?,
+                    width as usize * height as usize * size_of::<u32>(),
+                )
+                .unwrap();
+
+                let bitmap = NxBitmap {
+                    width,
+                    height,
+                    data,
+                };
+
+                Ok(Some(bitmap))
+            }
+            _ => Ok(None),
+        }
     }
 
     /// Gets an iterator over the node's children.

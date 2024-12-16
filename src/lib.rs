@@ -28,10 +28,11 @@ pub enum NxError {
     InvalidString(#[from] core::str::Utf8Error),
 }
 
+#[derive(Debug)]
 pub struct NxBitmap {
-    pub index: u32,
     pub width: u16,
     pub height: u16,
+    pub data: Vec<u8>,
 }
 
 pub(crate) trait NxTryGet {
