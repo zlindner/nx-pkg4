@@ -1,9 +1,6 @@
-use std::{cmp::Ordering, io};
+use std::cmp::Ordering;
 
-use lz4_flex::{
-    decompress, decompress_size_prepended,
-    frame::{FrameDecoder, FrameEncoder},
-};
+use lz4_flex::decompress;
 
 use crate::{file::NxFile, NxBitmap, NxError, NxTryGet};
 
@@ -27,7 +24,7 @@ pub struct NxNode<'a> {
 
 impl<'a> NxNode<'a> {
     /// Gets a node with the given name starting from the current node.
-    pub fn get(&self, name: &str) -> Option<NxNode> {
+    fn get(&self, name: &str) -> Option<NxNode> {
         let mut index = self.file.header.node_offset + self.data.children as u64 * NX_NODE_OFFSET;
         let mut count = self.data.count as u64;
 
@@ -144,6 +141,38 @@ impl From<u16> for NxNodeType {
             5 => Self::Bitmap,
             6 => Self::Audio,
             _ => Self::Invalid(value),
+        }
+    }
+}
+
+pub trait Node {
+    fn get(&self, name: &str) -> Option<NxNode>;
+
+    fn bitmap(&self) -> Result<Option<NxBitmap>, NxError>;
+}
+
+impl<'a> Node for NxNode<'a> {
+    fn get(&self, name: &str) -> Option<NxNode> {
+        self.get(name)
+    }
+
+    fn bitmap(&self) -> Result<Option<NxBitmap>, NxError> {
+        self.bitmap()
+    }
+}
+
+impl<'a> Node for Option<NxNode<'a>> {
+    fn get(&self, name: &str) -> Option<NxNode> {
+        match self {
+            Some(node) => node.get(name),
+            None => None,
+        }
+    }
+
+    fn bitmap(&self) -> Result<Option<NxBitmap>, NxError> {
+        match self {
+            Some(node) => node.bitmap(),
+            None => Ok(None),
         }
     }
 }
