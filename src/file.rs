@@ -80,7 +80,6 @@ impl NxFile {
     }
 }
 
-#[derive(Debug)]
 pub(crate) struct NxHeader {
     node_count: u32,
     pub(crate) node_offset: u64,

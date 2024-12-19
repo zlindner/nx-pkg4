@@ -6,7 +6,7 @@ use crate::{file::NxFile, NxBitmap, NxError, NxTryGet};
 
 const NX_NODE_OFFSET: u64 = 20;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub(crate) struct NxNodeData {
     pub(crate) index: u64,
     pub(crate) name: u32,
