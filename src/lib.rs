@@ -3,6 +3,9 @@ use core::str;
 use node::NxNodeData;
 use thiserror::Error;
 
+pub use self::file::NxFile;
+pub use self::node::{Node, NxNode, NxNodeIterator, NxNodeType};
+
 pub mod file;
 pub mod node;
 
