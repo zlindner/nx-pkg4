@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/zlindner/nx-pkg4"
 documentation = "https://docs.rs/nx-pkg4/"
 description = "A crate for reading NX/PKG4 files"
-categories = ["parser"]
+categories = ["parser-implementations"]
 keywords = ["nx", "pkg4", "maplestory"]
 
 [dependencies]
